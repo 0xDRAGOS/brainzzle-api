@@ -1,9 +1,11 @@
 package com.brainzzle.brainzzle_api.entities;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
 @Entity
 @Table(name = "answers_questions")
+@Data
 public class QuestionAnswer {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

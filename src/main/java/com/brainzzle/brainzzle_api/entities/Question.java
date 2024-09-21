@@ -1,11 +1,13 @@
 package com.brainzzle.brainzzle_api.entities;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
 import java.util.List;
 
 @Entity
 @Table(name = "questions")
+@Data
 public class Question {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
