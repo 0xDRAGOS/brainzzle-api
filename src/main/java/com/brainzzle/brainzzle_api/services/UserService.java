@@ -12,9 +12,12 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class UserService {
+    private static final String EMAIL_REGEX = "^[A-Za-z0-9.%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}$";
     @Autowired
     private UserRepository userRepository;
     @Autowired
@@ -27,6 +30,18 @@ public class UserService {
     public ReqRes register(ReqRes registrationRequest) {
         ReqRes response = new ReqRes();
 
+        if (userRepository.findByEmail(registrationRequest.getEmail()).isPresent()) {
+            response.setMessage("An user with this email already exists.");
+            response.setStatusCode(400);
+            return response;
+        }
+
+        if (!isValidEmail(registrationRequest.getEmail())) {
+            response.setMessage("Email is not valid.");
+            response.setStatusCode(400);
+            return response;
+        }
+
         try {
             User ourUser = new User();
             ourUser.setEmail(registrationRequest.getEmail());
@@ -38,7 +53,7 @@ public class UserService {
 
             if (userResult.getId() > 0) {
                 response.setUser((userResult));
-                response.setMessage("User Saved Successfully");
+                response.setMessage("User saved successfully.");
                 response.setStatusCode(200);
             }
         } catch (Exception e) {
@@ -57,6 +72,7 @@ public class UserService {
                     .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(),
                             loginRequest.getPassword()));
             var user = userRepository.findByEmail(loginRequest.getEmail()).orElseThrow();
+
             var jwt = jwtUtils.generateToken(user);
             var refreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), user);
 
@@ -221,6 +237,12 @@ public class UserService {
         }
 
         return reqRes;
+    }
+
+    public static boolean isValidEmail(String email) {
+        Pattern pattern = Pattern.compile(EMAIL_REGEX, Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(email);
+        return matcher.matches();
     }
 }
 
