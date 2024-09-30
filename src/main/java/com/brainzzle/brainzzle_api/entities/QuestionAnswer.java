@@ -1,5 +1,6 @@
 package com.brainzzle.brainzzle_api.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -14,6 +15,7 @@ public class QuestionAnswer {
 
     @ManyToOne
     @JoinColumn(name = "question_id")
+    @JsonBackReference
     private Question question;
 
     @Column(name = "user_id")
@@ -24,24 +26,4 @@ public class QuestionAnswer {
 
     @Column(name = "is_correct")
     private Boolean isCorrect;
-
-    public Long getAnswerId() {
-        return answerId;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public String getAnswerText() {
-        return answerText;
-    }
-
-    public Boolean getIsCorrect() {
-        return isCorrect;
-    }
-
-    public void setIsCorrect(Boolean isCorrect) {
-        this.isCorrect = isCorrect;
-    }
 }

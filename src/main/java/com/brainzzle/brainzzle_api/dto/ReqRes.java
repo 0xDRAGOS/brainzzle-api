@@ -4,8 +4,6 @@ import com.brainzzle.brainzzle_api.entities.User;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
-import lombok.NonNull;
-import org.antlr.v4.runtime.misc.NotNull;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package com.brainzzle.brainzzle_api.services;
+package com.brainzzle.brainzzle_api.services.auth;
 
 import com.brainzzle.brainzzle_api.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;

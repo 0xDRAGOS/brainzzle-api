@@ -1,4 +1,4 @@
-package com.brainzzle.brainzzle_api.services;
+package com.brainzzle.brainzzle_api.services.auth;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

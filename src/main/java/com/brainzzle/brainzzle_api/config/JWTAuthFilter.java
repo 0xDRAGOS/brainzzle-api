@@ -1,7 +1,7 @@
 package com.brainzzle.brainzzle_api.config;
 
-import com.brainzzle.brainzzle_api.services.JWTUtils;
-import com.brainzzle.brainzzle_api.services.UserDetailsService;
+import com.brainzzle.brainzzle_api.services.auth.JWTUtils;
+import com.brainzzle.brainzzle_api.services.auth.UserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

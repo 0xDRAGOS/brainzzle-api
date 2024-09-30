@@ -1,6 +1,6 @@
 package com.brainzzle.brainzzle_api.config;
 
-import com.brainzzle.brainzzle_api.services.UserDetailsService;
+import com.brainzzle.brainzzle_api.services.auth.UserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
