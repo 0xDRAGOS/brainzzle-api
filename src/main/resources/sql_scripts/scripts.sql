@@ -8,11 +8,24 @@ CREATE TABLE users
     last_name  VARCHAR(100) NOT NULL
 );
 
+CREATE TABLE quizzes (
+    quiz_id          SERIAL       NOT NULL PRIMARY KEY,
+    user_id          INT          NOT NULL,
+    quiz_title       VARCHAR(255) NOT NULL,
+    quiz_description TEXT,
+    created_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    is_active        BOOLEAN      NOT NULL DEFAULT TRUE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
 CREATE TABLE questions (
     question_id   SERIAL    NOT NULL PRIMARY KEY,
+    quiz_id       INT       NOT NULL,
     user_id       INT       NOT NULL,
     question_text TEXT      NOT NULL,
     created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (quiz_id) REFERENCES quizzes(quiz_id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 

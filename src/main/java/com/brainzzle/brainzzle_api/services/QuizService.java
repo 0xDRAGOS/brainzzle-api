@@ -139,14 +139,18 @@ public class QuizService {
                 question.setQuiz(quiz);
                 question.setUserId(userId);
 
-                question.getAnswers().forEach(answer -> {
-                    answer.setQuestion(question);
-                    answer.setUserId(userId);
-                });
+                if (question.getAnswers() != null) {
+                    question.getAnswers().forEach(answer -> {
+                        answer.setQuestion(question);
+                        answer.setUserId(userId);
+                    });
+                }
 
-                question.getImages().forEach(image -> {
-                    image.setQuestion(question);
-                });
+                if (question.getImages() != null) {
+                    question.getImages().forEach(image -> {
+                        image.setQuestion(question);
+                    });
+                }
             });
         }
     }

@@ -22,7 +22,7 @@ public class Question {
     @Column(name = "user_id")
     private Long userId;
     @Column(name = "question_text")
-    private String text;
+    private String questionText;
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<QuestionAnswer> answers;
