@@ -1,17 +1,19 @@
 package com.brainzzle.brainzzle_api.services;
 
-import com.brainzzle.brainzzle_api.dto.response.QuizDTO;
+import com.brainzzle.brainzzle_api.dto.*;
 import com.brainzzle.brainzzle_api.entities.*;
 import com.brainzzle.brainzzle_api.exceptions.ResourceNotFoundException;
 import com.brainzzle.brainzzle_api.exceptions.UnauthorizedException;
 import com.brainzzle.brainzzle_api.repositories.QuizRepository;
 import com.brainzzle.brainzzle_api.services.auth.UserService;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+
 import org.modelmapper.TypeToken;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -112,6 +114,34 @@ public class QuizService {
         }
     }
 
+    public QuizDetailDTO getQuizDetailById(Long quizId) {
+        Optional<User> user = userService.getCurrentUser();
+        if (user.isEmpty()) {
+            throw new UnauthorizedException("User is not authenticated.");
+        }
+
+        Long userId = user.get().getId();
+        Optional<Quiz> quizOptional = quizRepository.findByIdAndUserId(quizId, userId);
+        if (quizOptional.isPresent()) {
+            return modelMapper.map(quizOptional.get(), QuizDetailDTO.class);
+        } else {
+            throw new ResourceNotFoundException("No quiz associated with this user has been found.");
+        }
+    }
+
+    public Page<QuizSummaryDTO> getQuizSummaries(int page, int size) {
+        Optional<User> user = userService.getCurrentUser();
+        if (user.isEmpty()) {
+            throw new UnauthorizedException("User is not authenticated.");
+        }
+
+        Long userId = user.get().getId();
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Quiz> quizzes = quizRepository.findAllByUserId(userId, pageable);
+
+        return quizzes.map(quiz -> modelMapper.map(quiz, QuizSummaryDTO.class));
+    }
+
     @Transactional
     public void delete(Long quizId) {
         if (!quizRepository.existsById(quizId)) {
@@ -147,11 +177,43 @@ public class QuizService {
                 }
 
                 if (question.getImages() != null) {
-                    question.getImages().forEach(image -> {
-                        image.setQuestion(question);
-                    });
+                    question.getImages().forEach(image -> image.setQuestion(question));
                 }
             });
         }
+    }
+
+    @Transactional
+    public SubmitResultDTO submitQuiz(Long quizId, SubmitQuizDTO submitQuizDTO) {
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new ResourceNotFoundException("Quiz not found"));
+
+        int score = 0;
+        int totalQuestions = quiz.getQuestions().size();
+
+        for (SubmittedAnswerDTO submittedAnswer : submitQuizDTO.getAnswers()) {
+            Question question = quiz.getQuestions().stream()
+                    .filter(q -> q.getId().equals(submittedAnswer.getQuestionId()))
+                    .findFirst()
+                    .orElseThrow(() -> new ResourceNotFoundException("Question not found"));
+
+            List<Long> correctAnswers = question.getAnswers().stream()
+                    .filter(QuestionAnswer::getIsCorrect)
+                    .map(QuestionAnswer::getAnswerId)
+                    .toList();
+
+            boolean isCorrect = new HashSet<>(submittedAnswer.getSelectedAnswerIds()).containsAll(correctAnswers) &&
+                    new HashSet<>(correctAnswers).containsAll(submittedAnswer.getSelectedAnswerIds());
+
+            if (isCorrect) {
+                score++;
+            }
+        }
+
+        SubmitResultDTO result = new SubmitResultDTO();
+        result.setScore(score);
+        result.setTotalQuestions(totalQuestions);
+
+        return result;
     }
 }
