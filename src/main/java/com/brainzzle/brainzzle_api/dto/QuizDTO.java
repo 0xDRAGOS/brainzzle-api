@@ -35,11 +35,11 @@ public class QuizDTO {
             private Boolean isCorrect;
         }
 
-        @Data
-        public static class QuestionImageDTO {
-            private Long imageId;
-            private String imageUrl;
-        }
+//        @Data
+//        public static class QuestionImageDTO {
+//            private Long imageId;
+//            private String imageUrl;
+//        }
 
     }
 }

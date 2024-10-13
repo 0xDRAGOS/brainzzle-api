@@ -2,11 +2,15 @@ package com.brainzzle.brainzzle_api.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "answers_questions")
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
 public class QuestionAnswer {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

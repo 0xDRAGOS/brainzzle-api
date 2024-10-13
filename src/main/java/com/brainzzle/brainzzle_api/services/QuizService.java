@@ -4,6 +4,7 @@ import com.brainzzle.brainzzle_api.dto.*;
 import com.brainzzle.brainzzle_api.entities.*;
 import com.brainzzle.brainzzle_api.exceptions.ResourceNotFoundException;
 import com.brainzzle.brainzzle_api.exceptions.UnauthorizedException;
+import com.brainzzle.brainzzle_api.repositories.QuestionRepository;
 import com.brainzzle.brainzzle_api.repositories.QuizRepository;
 import com.brainzzle.brainzzle_api.services.auth.UserService;
 import org.modelmapper.ModelMapper;
@@ -22,11 +23,13 @@ import java.lang.reflect.Type;
 @Service
 public class QuizService {
     private final QuizRepository quizRepository;
+    private final QuestionRepository questionRepository;
     private final UserService userService;
     private final ModelMapper modelMapper;
 
-    public QuizService(QuizRepository quizRepository, UserService userService, ModelMapper modelMapper) {
+    public QuizService(QuizRepository quizRepository, QuestionRepository questionRepository, UserService userService, ModelMapper modelMapper) {
         this.quizRepository = quizRepository;
+        this.questionRepository = questionRepository;
         this.userService = userService;
         this.modelMapper = modelMapper;
     }
@@ -63,15 +66,20 @@ public class QuizService {
             Quiz updatedQuiz = quizOptional.get();
 
             if (!Objects.equals(updatedQuiz.getUserId(), userId)) {
-                throw new UnauthorizedException("User is authorized to do this action.");
+                throw new UnauthorizedException("User is not authorized to do this action.");
             }
 
-            updatedQuiz.setUserId(userId);
             updatedQuiz.setTitle(quizDTO.getTitle());
             updatedQuiz.setDescription(quizDTO.getDescription());
+
+            if (quizDTO.getQuestions().size() < updatedQuiz.getQuestions().size()) {
+                questionRepository.deleteAllByQuizId(quizId);
+                updatedQuiz.getQuestions().clear();
+            }
+
             Type questionListType = new TypeToken<List<Question>>() {}.getType();
             List<Question> questionList = modelMapper.map(quizDTO.getQuestions(), questionListType);
-            updatedQuiz.setQuestions(questionList);
+            updatedQuiz.getQuestions().addAll(questionList);
 
             populateQuizRelations(userId, updatedQuiz);
 
@@ -81,6 +89,7 @@ public class QuizService {
             throw new ResourceNotFoundException("Quiz not found.");
         }
     }
+
 
     public List<QuizDTO> getAll() {
         Optional<User> user = userService.getCurrentUser();
