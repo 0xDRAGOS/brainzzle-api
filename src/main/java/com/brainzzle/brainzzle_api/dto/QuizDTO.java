@@ -16,6 +16,7 @@ public class QuizDTO {
     private String title;
     private String description;
     private List<QuestionDTO> questions;
+    private Boolean isPublic;
 
     @Data
     public static class QuestionDTO {

@@ -30,7 +30,7 @@ public class QuizController {
         return ResponseEntity.created(location).body(createdQuiz);
     }
 
-    @GetMapping
+    @GetMapping("/get-all")
     public ResponseEntity<List<QuizDTO>> getAllQuizzes() {
         List<QuizDTO> quizzes = quizService.getAll();
         return ResponseEntity.ok(quizzes);
@@ -45,6 +45,22 @@ public class QuizController {
         return ResponseEntity.ok(quizSummaries);
     }
 
+    @GetMapping("/get-all/summaries")
+    public ResponseEntity<Page<QuizSummaryDTO>> getAllQuizSummaries(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size ) {
+
+        Page<QuizSummaryDTO> quizSummaryDTOS = quizService.getAllPublicQuizSummaries(page, size);
+        return ResponseEntity.ok(quizSummaryDTOS);
+    }
+
+    @GetMapping("/get-top")
+    public ResponseEntity<List<QuizSummaryDTO>> getTopQuizSummaries(
+            @RequestParam(defaultValue = "3") int topNumber) {
+
+        List<QuizSummaryDTO> quizTopSummaries = quizService.getTopPublicQuizSummaries(topNumber);
+        return ResponseEntity.ok(quizTopSummaries);
+    }
 
     @GetMapping("/{quizId}")
     public ResponseEntity<QuizDTO> getQuiz(@PathVariable("quizId") Long quizId) {

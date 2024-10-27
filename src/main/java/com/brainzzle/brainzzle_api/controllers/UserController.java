@@ -1,6 +1,8 @@
 package com.brainzzle.brainzzle_api.controllers;
 
+import com.brainzzle.brainzzle_api.dto.PasswordUpdateDTO;
 import com.brainzzle.brainzzle_api.dto.ReqRes;
+import com.brainzzle.brainzzle_api.dto.UserUpdateDTO;
 import com.brainzzle.brainzzle_api.entities.User;
 import com.brainzzle.brainzzle_api.services.auth.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +57,21 @@ public class UserController {
         return ResponseEntity.ok(userService.updateUser(userId, user));
     }
 
+    @PutMapping("/user/update-password/{userId}")
+    public ResponseEntity<ReqRes> updatePassword(
+            @PathVariable Long userId,
+            @RequestBody PasswordUpdateDTO passwordUpdateDTO) {
+        ReqRes response = userService.updatePassword(userId, passwordUpdateDTO);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+    @PutMapping("/user/update-details")
+    public ResponseEntity<ReqRes> updateDetails(
+            @RequestBody UserUpdateDTO userUpdateDTO) {
+        ReqRes response = userService.updateDetails(userUpdateDTO);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
     @GetMapping("/adminuser/get-profile")
     public ResponseEntity<ReqRes> getMyProfile(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -64,7 +81,12 @@ public class UserController {
     }
 
     @DeleteMapping("/admin/delete/{userId}")
-    public ResponseEntity<ReqRes> deleteUSer(@PathVariable Long userId){
+    public ResponseEntity<ReqRes> deleteUser(@PathVariable Long userId){
+        return ResponseEntity.ok(userService.deleteUser(userId));
+    }
+
+    @DeleteMapping("/user/delete/{userId}")
+    public ResponseEntity<ReqRes> deleteMyUser(@PathVariable Long userId){
         return ResponseEntity.ok(userService.deleteUser(userId));
     }
 }

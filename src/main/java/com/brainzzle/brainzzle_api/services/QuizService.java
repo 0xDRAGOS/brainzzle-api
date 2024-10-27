@@ -41,7 +41,7 @@ public class QuizService {
             throw new UnauthorizedException("User is not authenticated.");
         }
 
-        Long userId = user.get().getId();
+        Long userId = user.get().getUserId();
         Quiz newQuiz = modelMapper.map(quizDTO, Quiz.class);
         newQuiz.setUserId(userId);
 
@@ -59,7 +59,7 @@ public class QuizService {
             throw new UnauthorizedException("User is not authenticated.");
         }
 
-        Long userId = user.get().getId();
+        Long userId = user.get().getUserId();
         Optional<Quiz> quizOptional = quizRepository.findById(quizId);
 
         if (quizOptional.isPresent()) {
@@ -97,7 +97,7 @@ public class QuizService {
             throw new UnauthorizedException("User is not authenticated.");
         }
 
-        Long userId = user.get().getId();
+        Long userId = user.get().getUserId();
         Type quizDTOType = new TypeToken<List<QuizDTO>>() {}.getType();
         List<QuizDTO> quizzes = modelMapper.map(quizRepository.findAllByUserId(userId), quizDTOType);
 
@@ -114,7 +114,7 @@ public class QuizService {
             throw new UnauthorizedException("User is not authenticated.");
         }
 
-        Long userId = user.get().getId();
+        Long userId = user.get().getUserId();
         Optional<Quiz> quizOptional = quizRepository.findByIdAndUserId(quizId, userId);
         if (quizOptional.isPresent()) {
             return modelMapper.map(quizOptional.get(), QuizDTO.class);
@@ -129,7 +129,7 @@ public class QuizService {
             throw new UnauthorizedException("User is not authenticated.");
         }
 
-        Long userId = user.get().getId();
+        Long userId = user.get().getUserId();
         Optional<Quiz> quizOptional = quizRepository.findByIdAndUserId(quizId, userId);
         if (quizOptional.isPresent()) {
             return modelMapper.map(quizOptional.get(), QuizDetailDTO.class);
@@ -144,7 +144,7 @@ public class QuizService {
             throw new UnauthorizedException("User is not authenticated.");
         }
 
-        Long userId = user.get().getId();
+        Long userId = user.get().getUserId();
         Pageable pageable = PageRequest.of(page, size);
         Page<Quiz> quizzes = quizRepository.findAllByUserId(userId, pageable);
 
@@ -162,7 +162,7 @@ public class QuizService {
             throw new UnauthorizedException("User is not authenticated.");
         }
 
-        Long userId = user.get().getId();
+        Long userId = user.get().getUserId();
 
         Optional<Quiz> quizOptional = quizRepository.findByIdAndUserId(quizId, userId);
         if (quizOptional.isPresent()) {
@@ -197,6 +197,8 @@ public class QuizService {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new ResourceNotFoundException("Quiz not found"));
 
+        incrementSubmitCount(quizId);
+
         int score = 0;
         int totalQuestions = quiz.getQuestions().size();
 
@@ -224,5 +226,24 @@ public class QuizService {
         result.setTotalQuestions(totalQuestions);
 
         return result;
+    }
+
+    public Page<QuizSummaryDTO> getAllPublicQuizSummaries(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Quiz> quizzes = quizRepository.findAllByIsPublic(true, pageable);
+
+        return quizzes.map(quiz -> modelMapper.map(quiz, QuizSummaryDTO.class));
+    }
+
+    @Transactional
+    public void incrementSubmitCount(Long quizId) {
+        quizRepository.incrementSubmitCount(quizId);
+    }
+
+    public List<QuizSummaryDTO> getTopPublicQuizSummaries(int topNumber) {
+        List<Quiz> topQuizzes = quizRepository.findTopPublicQuizzes(topNumber);
+
+        Type quizSummaryListType = new TypeToken<List<QuizSummaryDTO>>() {}.getType();
+        return modelMapper.map(topQuizzes, quizSummaryListType);
     }
 }
