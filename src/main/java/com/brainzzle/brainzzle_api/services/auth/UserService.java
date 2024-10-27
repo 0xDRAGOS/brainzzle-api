@@ -1,6 +1,8 @@
 package com.brainzzle.brainzzle_api.services.auth;
 
+import com.brainzzle.brainzzle_api.dto.PasswordUpdateDTO;
 import com.brainzzle.brainzzle_api.dto.ReqRes;
+import com.brainzzle.brainzzle_api.dto.UserUpdateDTO;
 import com.brainzzle.brainzzle_api.entities.User;
 import com.brainzzle.brainzzle_api.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +55,7 @@ public class UserService {
             ourUser.setPassword(passwordEncoder.encode(registrationRequest.getPassword()));
             User userResult = userRepository.save(ourUser);
 
-            if (userResult.getId() > 0) {
+            if (userResult.getUserId() > 0) {
                 response.setUser((userResult));
                 response.setMessage("User saved successfully.");
                 response.setStatusCode(200);
@@ -119,7 +121,6 @@ public class UserService {
         }
     }
 
-
     public ReqRes getAllUsers() {
         ReqRes reqRes = new ReqRes();
 
@@ -144,7 +145,6 @@ public class UserService {
         }
     }
 
-
     public ReqRes getUsersById(Long id) {
         ReqRes reqRes = new ReqRes();
 
@@ -160,7 +160,6 @@ public class UserService {
 
         return reqRes;
     }
-
 
     public ReqRes deleteUser(Long userId) {
         ReqRes reqRes = new ReqRes();
@@ -183,6 +182,38 @@ public class UserService {
 
         return reqRes;
     }
+
+    public ReqRes deleteMyUser(Long userId) {
+        ReqRes reqRes = new ReqRes();
+
+        try {
+            Optional<User> userOptional = userRepository.findById(userId);
+            Optional<User> currentUserOptional = getCurrentUser();
+
+            if (userOptional.isPresent() && currentUserOptional.isPresent()) {
+                User userToDelete = userOptional.get();
+                User currentUser = currentUserOptional.get();
+
+                if (userToDelete.getUserId().equals(currentUser.getUserId())) {
+                    userRepository.deleteById(userId);
+                    reqRes.setStatusCode(200);
+                    reqRes.setMessage("User deleted successfully");
+                } else {
+                    reqRes.setStatusCode(403);
+                    reqRes.setMessage("User not authorized to delete this account.");
+                }
+            } else {
+                reqRes.setStatusCode(404);
+                reqRes.setMessage("User not found for deletion");
+            }
+        } catch (Exception e) {
+            reqRes.setStatusCode(500);
+            reqRes.setMessage("Error occurred while deleting user: " + e.getMessage());
+        }
+
+        return reqRes;
+    }
+
 
     public ReqRes updateUser(Long userId, User updatedUser) {
         ReqRes reqRes = new ReqRes();
@@ -217,6 +248,40 @@ public class UserService {
         return reqRes;
     }
 
+    public ReqRes updatePassword(Long userId, PasswordUpdateDTO passwordUpdateDTO) {
+        ReqRes reqRes = new ReqRes();
+
+        try {
+            Optional<User> userOptional = userRepository.findById(userId);
+
+            if (userOptional.isPresent()) {
+                User existingUser = userOptional.get();
+
+                if (passwordEncoder.matches(passwordUpdateDTO.getCurrentPassword(), existingUser.getPassword())) {
+                    if (!passwordUpdateDTO.getNewPassword().equals(passwordUpdateDTO.getCurrentPassword())) {
+                        existingUser.setPassword(passwordEncoder.encode(passwordUpdateDTO.getNewPassword()));
+                        userRepository.save(existingUser);
+                        reqRes.setStatusCode(200);
+                        reqRes.setMessage("Password updated successfully");
+                    } else {
+                        reqRes.setStatusCode(400);
+                        reqRes.setMessage("New password cannot be the same as the current password");
+                    }
+                } else {
+                    reqRes.setStatusCode(400);
+                    reqRes.setMessage("Current password is incorrect");
+                }
+            } else {
+                reqRes.setStatusCode(404);
+                reqRes.setMessage("User not found");
+            }
+        } catch (Exception e) {
+            reqRes.setStatusCode(500);
+            reqRes.setMessage("Error occurred while updating the password: " + e.getMessage());
+        }
+
+        return reqRes;
+    }
 
     public ReqRes getMyInfo(String email){
         ReqRes reqRes = new ReqRes();
@@ -233,7 +298,7 @@ public class UserService {
                 reqRes.setMessage("User not found for update");
             }
 
-        }catch (Exception e){
+        } catch (Exception e) {
             reqRes.setStatusCode(500);
             reqRes.setMessage("Error occurred while getting user info: " + e.getMessage());
         }
@@ -261,6 +326,55 @@ public class UserService {
         Pattern pattern = Pattern.compile(EMAIL_REGEX, Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(email);
         return matcher.matches();
+    }
+
+    public ReqRes updateDetails(UserUpdateDTO userUpdateDTO) {
+        ReqRes reqRes = new ReqRes();
+
+        try {
+            Optional<User> currentUserOptional = getCurrentUser();
+
+            if (currentUserOptional.isPresent()) {
+                User currentUser = currentUserOptional.get();
+
+                if (userUpdateDTO.getFirstName() != null) {
+                    currentUser.setFirstName(userUpdateDTO.getFirstName());
+                }
+                if (userUpdateDTO.getLastName() != null) {
+                    currentUser.setLastName(userUpdateDTO.getLastName());
+                }
+
+                if (userUpdateDTO.getEmail() != null) {
+                    if (isValidEmail(userUpdateDTO.getEmail())) {
+                        Optional<User> emailOwner = userRepository.findByEmail(userUpdateDTO.getEmail());
+                        if (emailOwner.isPresent() && !emailOwner.get().getUserId().equals(currentUser.getUserId())) {
+                            reqRes.setStatusCode(400);
+                            reqRes.setMessage("Email is already taken by another user.");
+                            return reqRes;
+                        }
+                        currentUser.setEmail(userUpdateDTO.getEmail());
+                    } else {
+                        reqRes.setStatusCode(400);
+                        reqRes.setMessage("Invalid email format.");
+                        return reqRes;
+                    }
+                }
+
+                userRepository.save(currentUser);
+
+                reqRes.setUser(currentUser);
+                reqRes.setStatusCode(200);
+                reqRes.setMessage("User details updated successfully.");
+            } else {
+                reqRes.setStatusCode(404);
+                reqRes.setMessage("User not found.");
+            }
+        } catch (Exception e) {
+            reqRes.setStatusCode(500);
+            reqRes.setMessage("Error occurred while updating user details: " + e.getMessage());
+        }
+
+        return reqRes;
     }
 }
 

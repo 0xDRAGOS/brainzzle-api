@@ -31,5 +31,11 @@ public class Quiz {
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<Question> questions;
+
+    @Column(name = "is_public")
+    private Boolean isPublic;
+
+    @Column(name = "submit_count")
+    private Integer submitCount = 0;
 }
 
